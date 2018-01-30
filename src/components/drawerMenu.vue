@@ -28,7 +28,7 @@
         </mu-list>
       </div>
       <div class="popup_menu">
-        <mu-list>
+        <mu-list @itemClick="closePopup">
           <mu-list-item title="HOME" >
             <mu-icon slot="left" value=":iconfont icon-home"/>
           </mu-list-item>
@@ -44,7 +44,7 @@
         </mu-list>
       </div>
       <div class="popup_menu">
-        <mu-list>
+        <mu-list @itemClick="closePopup">
           <mu-list-item title="FRIEND" >
             <mu-icon slot="right" value=":iconfont icon-friendadd"/>
           </mu-list-item>

@@ -11,6 +11,7 @@
         ></blog-data>
       </div>
     </div>
+    <tail></tail>
   </div>
 </template>
 
@@ -18,11 +19,13 @@
   import {getArticle} from "../api/article";
   import drawerMenu from "@/components/drawerMenu"
   import blogData from "@/baseComponents/blogData"
+  import tail from "@/baseComponents/tail"
     export default {
         name: "blog",
         components: {
           drawerMenu,
-          blogData
+          blogData,
+          tail
         },
         data() {
           return {
