@@ -7,9 +7,9 @@
       :title="blog.name"
       :date="blog.date"
       :bgImgName="blog.bgImgName"
-      :tags='blog.type.split(",")'
+      :tags='blog.type'
       :intro="blog.intro"
-      bgImg="../../static/IMG/bg/BG.jpg">
+      bgImg="../../static/img/bg/BG.jpg">
     </abstract-card>
   </div>
 </template>

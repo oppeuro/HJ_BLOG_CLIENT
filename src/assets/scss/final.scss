@@ -1,7 +1,6 @@
 
 @import "base.scss";
-@import "baseComponents/blogIntro.scss";
 @import "baseComponents/navBar";
-@import "components/info.scss";
-@import "components/summary.scss";
-@import "viewScss/index.scss";
+@import "baseComponents/blogData";
+
+@import "viewScss/blog";

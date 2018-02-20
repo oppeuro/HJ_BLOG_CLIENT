@@ -22,7 +22,7 @@
 </template>
 
 <script>
-  import {getArticleNum} from "../../../blog/src/api/article";
+  import {getArticleList} from "../api/article"
 
   export default {
         name: "list",
@@ -37,9 +37,8 @@
         },
         methods: {
           _getArtilceList() {
-            getArticleNum()
+            getArticleList()
               .then((data) => {
-                //console.log(data);
                 this.dataList = data.data;
               })
               .catch(function (err) {

@@ -3,13 +3,15 @@
     <label for="input_article_title" class="editor_article_title">
       <i class="iconfont icon-biaoti"></i>
       <input id="input_article_title" type="text" v-model="title">
+      <div class="btn btn-danger" id="delete" :disabled=!prop_edit_update_articleData @click="prop_edit_update_articleData && wait('_deleteArticle')">删除文章</div>
+      <mu-checkbox label="置顶" class="my_checkbox" v-model="top"/>
     </label>
     <label  class="editor_article_tag_submit">
       <i class="iconfont icon-tag"></i>
       <input id="input_article_tag" type="text" v-model="tag">
       <div id="article_control">
-        <div class="btn btn-primary" :disabled=edit_update_articleData id="submit" @click="_uploadArticle">发布文章</div>
-        <div class="btn btn-success" :disabled=!edit_update_articleData id="updata" @click="_updataArticle">更新文章</div>
+        <div class="btn btn-primary" :disabled=prop_edit_update_articleData id="submit" @click="!prop_edit_update_articleData && validation() && wait('_uploadArticle')">发布文章</div>
+        <div class="btn btn-success" :disabled=!prop_edit_update_articleData id="updata" @click="prop_edit_update_articleData && validation() && wait('_updateArticle')">更新文章</div>
         <label class="btn btn-success">
             <span>上传</span>
             <input id="input_file" type="file">
@@ -35,11 +37,17 @@
           @change="getSummaryValue"></mavon-editor>
       </div>
     </div>
+    <mu-dialog :open="dialog" title="ALERT">
+      {{alert_meg}}
+      <mu-flat-button label="取消" slot="actions" primary @click="makeSure(false)"/>
+      <mu-flat-button label="确定" slot="actions" primary @click="makeSure(true)"/>
+    </mu-dialog>
+    <mu-toast v-if='toast' :message="toastMsg"/>
   </div>
 </template>
 
 <script>
-  import {updateArticle,uploadArticle,uploadImg} from "../../../blog/src/api/article";
+  import {updateArticle,uploadArticle,uploadImg,deleteArticle} from "@/api/article";
   import {mavonEditor} from 'mavon-editor'
   import 'mavon-editor/dist/css/index.css'
     export default {
@@ -52,14 +60,23 @@
         },
         data() {
           return {
+            prop_edit_update_articleData: this.edit_update_articleData,
             code_style: "monokai-sublime",
             title: "",
+            top: false,
             tag: "",
             summary: "",
             article_value: "",
             bgImgName: "",
             article_html_value: "",
             shadowShow: false,
+            dialog: false,
+            alert_meg:"",
+            waitToDo: "",
+            toast: false,
+            toastMsg:"",
+            imgUploaded: false,
+            articleUploaded: false,
           }
         },
         methods: {
@@ -72,61 +89,145 @@
           clearData() {
             this.title = this.tag = this.summary = this.article_value = this.article_html_value = "";
           },
-          formatArticle() {
-            var inputFile = document.getElementById('input_file');
-            var fileName = inputFile.files[0].name.split('.');
-            var fileType = fileName[fileName.length - 1];
+          _addSummary() {
+            this.shadowShow = true;
+          },
+          openDialog() {
+            this.dialog = true;
+          },
+          toastMeg(msg) {
+            this.toast = true;
+            this.toastMsg = msg;
+            setTimeout(() => {
+              this.toast = false;
+            }, 2000)
+          },
+          delay(msg) {
+            var timer = null;
+            var now = this;
+            var delayUploaded = function() {
+              if(now.imgUploaded && now.articleUploaded) {
+                now.imgUploaded = now.articleUploaded = false;
+                now.toastMeg(msg);
+                now.$emit('update_content_list');
+                clearTimeout(timer);
+                return;
+              }else {
+                timer = setTimeout(delayUploaded,500);
+              }
+            }
+            timer = setTimeout(delayUploaded,500)
+          },
+          wait(f) {
+            if(f == '_uploadArticle') {
+              this.alert_meg = '是否确认上传新文章'
+            }else if(f == '_updateArticle') {
+              this.alert_meg = '是否确认更新该文章'
+            }else {
+              this.alert_meg = '是否确认删除该文章'
+            }
+            this.dialog = true;
+            this.waitToDo = this[f];
+          },
+          makeSure(flag) {
+            this.dialog = false;
+            if(flag) {
+              this.waitToDo();
+              this.waitToDo = null;
+            }
+          },
+          formatnewArticle() {
             return {
               date: new Date().toLocaleString(),
               name: this.title,
-              type: this.tag,
+              isTop: this.top ? 1 : 0,
+              type: this.tag.split(','),
               intro: this.summary,
-              bgImgName: new Date().getFullYear()+'-'+(parseInt(new Date().getMonth())+1)+ '-'+ new Date().getDate()+'_'+this.title+'.'+fileType,
               resource: this.article_value,
               data: this.article_html_value
             }
           },
-          _addSummary() {
-            this.shadowShow = true;
-          },
-          _uploadImg() {
-            var inputFile = document.getElementById('input_file');
-            var formdata = new FormData();
-            formdata.append('img', inputFile.files[0]);
-            uploadImg(this.title,formdata);
-          },
-          _uploadArticle() {
-            let reg = /^\s*/
-            if(this.title.replace(reg,"") == "" || this.tag.replace(reg,"") == "" || this.summary.replace(reg,"") == "") {
-              //信息补全
-              console.log(false)
-            }else {
-              console.log(this.formatArticle());
-              uploadArticle(this.formatArticle());
-              this.$emit('update_content_list');
+          formatupdateArticle() {
+            return {
+              updateTime: new Date().toLocaleString(),
+              name: this.title,
+              isTop: this.top ? 1 : 0,
+              type: this.tag.split(','),
+              intro: this.summary,
+              resource: this.article_value,
+              data: this.article_html_value
             }
           },
-          _updataArticle() {
+          addSketch() {
+            var inputFile = document.getElementById('input_file');
+            if(inputFile.files[0] == null) {
+              this.imgUploaded = true;
+              return {};
+            }
+            var fileName = inputFile.files[0].name.split('.');
+            var fileType = fileName[fileName.length - 1];
+            this._uploadImg(inputFile.files[0])
+            return {
+                bgImgName: new Date().getFullYear()+'-'+(parseInt(new Date().getMonth())+1)+ '-'+ new Date().getDate()+'_'+this.title+'.'+fileType
+            }
+          },
+          _uploadImg(file) {
+            var formdata = new FormData();
+            formdata.append('img', file);
+            uploadImg(this.title,formdata)
+              .then((res) => {
+                this.imgUploaded = true;
+              })
+          },
+          validation() {
             let reg = /^\s*/
             if(this.title.replace(reg,"") == "" || this.tag.replace(reg,"") == "" || this.summary.replace(reg,"") == "") {
-              //信息补全
-              console.log(false)
-            }else {
-              updateArticle(Object.assign({_id:this.edit_update_articleData._id},this.formatArticle()));
-              this._uploadImg();
-              this.$emit('update_content_list');
+              this.toastMeg('请补全信息')
+              return false;
+            }
+            return true;
+          },
+          _uploadArticle() {
+            uploadArticle(Object.assign(this.formatnewArticle(),this.addSketch()))
+              .then((res) => {
+                this.articleUploaded = true;
+              })
+            this.delay('成功上传');
+          },
+          _updateArticle() {
+            updateArticle(Object.assign({_id:this.prop_edit_update_articleData._id},this.formatupdateArticle(),this.addSketch()))
+              .then((res) => {
+                this.articleUploaded = true;
+              })
+            this.delay("成功更新");
+          },
+          _deleteArticle() {
+            if(this.prop_edit_update_articleData) {
+              deleteArticle(this.prop_edit_update_articleData._id)
+                .then((res) => {
+                  this.toastMeg('成功删除')
+                  this.$emit('update_content_list');
+                  this.prop_edit_update_articleData = null;
+                })
             }
           }
         },
         watch: {
           edit_update_articleData: function () {
-            if(this.edit_update_articleData == null) {
-              this.title = this.tag = this.summary = this.article_value = "";
+            this.prop_edit_update_articleData = this.edit_update_articleData;
+            if(this.prop_edit_update_articleData == null) {
+              this.top= this.title = this.tag = this.summary = this.article_value = "";
             }else {
-              this.title = this.edit_update_articleData.name;
-              this.tag = this.edit_update_articleData.type;
-              this.summary = this.edit_update_articleData.intro;
-              this.article_value = this.edit_update_articleData.resource;
+              this.top = this.prop_edit_update_articleData.isTop;
+              this.title = this.prop_edit_update_articleData.name;
+              this.tag = this.prop_edit_update_articleData.type.join(',');
+              this.summary = this.prop_edit_update_articleData.intro;
+              this.article_value = this.prop_edit_update_articleData.resource;
+            }
+          },
+          prop_edit_update_articleData: function () {
+            if(this.prop_edit_update_articleData == null) {
+              this.top = this.title = this.tag = this.summary = this.article_value = "";
             }
           }
         }
@@ -138,9 +239,18 @@
     label{margin-bottom: 0px;font-weight: normal;}
     input{border: none;outline: none;padding-left: 20px;padding-right: 20px; color: #9b9b9b;}
     .iconfont{font-size: 22px;line-height: 48px;color: #373737;padding-left: 20px;padding-right: 20px;}
+    >.mu-toast{top: 100px; right: 150px;}
   }
   .editor_article_title{height: 50px;width: 100%;border-bottom: 1px solid #ebebeb;
-    >#input_article_title{font-size: 20px;line-height: 48px;height: 48px;width: 75%; color: #000000;}
+    >#input_article_title{font-size: 20px;line-height: 48px;height: 48px;width: 60%; color: #000000;}
+    >.my_checkbox{float: right;margin-top: 13px; margin-right: 30px;}
+    >#delete{float: right;margin-right: 30px; margin-top: 8px;}
+    @media (max-width: 1020px) {
+      .my_checkbox{display: none;}
+    }
+    @media (max-width: 950px) {
+      #delete{display: none;}
+    }
   }
   .editor_article_tag_submit{height: 50px;width: 100%; font-size: 20px;line-height: 48px;border-bottom: 1px solid #ebebeb;
     >#input_article_tag{width: 25%; display: inline-block;}
@@ -158,7 +268,7 @@
   .editor_article_summary{height: 50px;width: 100%;
     >#input_article_summary{position: relative; top: -2px; font-size: 16px;line-height: 1; height: 32px;width: 75%;}
     >#summary{float: right;margin-right: 30px; margin-top: 8px;}
-    @media (max-width: 900px) {
+    @media (max-width: 950px) {
       #summary{display: none;}
     }
   }

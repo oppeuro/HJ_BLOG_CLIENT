@@ -1,0 +1,12 @@
+
+.blogPage{position: relative;min-height: 100vh;
+  background-image: url($bgImgUrl);background-attachment: fixed;
+  background-repeat: no-repeat; background-position: center;  background-size: cover;}
+.blog_container{width: 90%;margin: 0 auto; padding-bottom: 180px;}
+.blogData_container{width: 100%; max-width: 900px; margin: 0 auto; margin-top: 50px; padding-top: 40px; }
+@media (max-width: 905px) {
+  .blog_container{width: 92%;}
+}
+@media (max-width: 600px) {
+  .blog_container{width: 95%; padding-bottom: 210px;}
+}

@@ -13,7 +13,7 @@
       {{intro}}
     </mu-card-text>
     <mu-card-actions>
-      <mu-flat-button v-for="(tag, index) in type" :key="index"  :label="tag"/>
+      <mu-flat-button v-for="(tag, index) in type" :key="index"  :label="tag" @click="_gotoTag(tag)"/>
     </mu-card-actions>
     <!--<mu-card-header title="OPPEURO" subTitle="TIME IS MONEY">-->
     <!--<mu-avatar src="../../static/IMG/avatar/avatar.gif" slot="avatar"/>-->
@@ -22,7 +22,7 @@
 </template>
 
 <script>
-  import {baseUrl} from "../api/article";
+  import {baseUrl} from "../api/API_BASE";
     export default {
         name: "abstract-card",
         props:{
@@ -35,7 +35,10 @@
         },
         methods: {
           _gotoBlog() {
-            this.$router.push('blog/' + this._id)
+            this.$router.push('/blog/' + this._id)
+          },
+          _gotoTag(tag) {
+            this.$router.push('/tags/' + tag)
           }
         },
         computed: {
@@ -45,12 +48,10 @@
         },
         watch: {
           bgImgName : () => {
-            //console.log(this.bgImgName);
             this.$refs.sketch.style.backgroundImage = 'url('+baseUrl + "/"+ this.bgImgName + ')';
           }
         },
         mounted() {
-          //console.log(this.bgImgName);
           this.$refs.sketch.style.backgroundImage = 'url('+baseUrl + "/"+ this.bgImgName + ')';
         }
     }

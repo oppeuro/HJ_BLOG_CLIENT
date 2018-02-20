@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="blogPage">
     <drawer-menu></drawer-menu>
     <div class="blog_container">
       <div class="blogData_container">
@@ -11,7 +11,7 @@
         ></blog-data>
       </div>
     </div>
-    <tail></tail>
+    <tail v-show="blogData.name"></tail>
   </div>
 </template>
 
@@ -37,7 +37,6 @@
             getArticle(id)
               .then((getData) => {
                 this.blogData = getData.data
-                console.log(getData.data)
               })
           }
         },
@@ -49,13 +48,5 @@
     }
 </script>
 
-<style lang="scss">
-  .blog_container{width: 90%;margin: 0 auto;}
-  .blogData_container{width: 100%; max-width: 900px; margin: 0 auto; margin-top: 50px; padding-top: 40px; }
-  @media (max-width: 905px) {
-    .blog_container{width: 92%;}
-  }
-  @media (max-width: 600px) {
-    .blog_container{width: 95%;}
-  }
+<style>
 </style>

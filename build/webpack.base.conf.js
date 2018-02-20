@@ -4,6 +4,13 @@ const utils = require('./utils')
 const config = require('../config')
 const vueLoaderConfig = require('./vue-loader.conf')
 
+const museUiThemePath = path.join(
+  __dirname,
+  'node_modules',
+  'muse-ui',
+  'src/styles/themes/variables/default.less'
+)
+
 function resolve (dir) {
   return path.join(__dirname, '..', dir)
 }
@@ -26,6 +33,7 @@ module.exports = {
     extensions: ['.js', '.vue', '.json'],
     alias: {
       'vue$': 'vue/dist/vue.esm.js',
+      'muse-components': 'muse-ui/src',
       '@': resolve('src'),
     }
   },
@@ -39,7 +47,11 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')]
+        include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')],
+        options: {
+          plugins:['syntax-dynamic-import']
+        }
+
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
